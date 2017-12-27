@@ -12,8 +12,9 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	defer midi.Close()
 
+	// Start controller loop:
 	controller := NewController(fswCh, midi)
 	controller.Loop()
-
 }
