@@ -51,9 +51,9 @@ func ListenFootswitch() (fswCh chan FswState, err error) {
 			// Determine which footswitch was pressed/released:
 			mask := FswState(0)
 			if key.Scancode == evdev.KEY_A {
-				mask = FswPrev
-			} else if key.Scancode == evdev.KEY_B {
 				mask = FswReset
+			} else if key.Scancode == evdev.KEY_B {
+				mask = FswPrev
 			} else if key.Scancode == evdev.KEY_C {
 				mask = FswNext
 			}
