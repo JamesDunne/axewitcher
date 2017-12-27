@@ -7,7 +7,13 @@ func main() {
 		panic(err)
 	}
 
-	controller := NewController(fswCh)
+	// Create MIDI interface:
+	midi, err := NewMidi()
+	if err != nil {
+		panic(err)
+	}
+
+	controller := NewController(fswCh, midi)
 	controller.Loop()
 
 }

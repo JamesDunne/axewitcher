@@ -2,6 +2,8 @@ package main
 
 type AmpMode int
 
+const axeMidiChannel = 2
+
 const (
 	AmpDirty AmpMode = iota
 	AmpClean
@@ -39,15 +41,18 @@ type Program struct {
 }
 
 type Controller struct {
-	fswCh    <-chan FswEvent
+	fswCh <-chan FswEvent
+	midi  Midi
+
 	programs []Program
 	curr     ControllerState
 	prev     ControllerState
 }
 
-func NewController(fswCh <-chan FswEvent) *Controller {
+func NewController(fswCh <-chan FswEvent, midi Midi) *Controller {
 	return &Controller{
 		fswCh: fswCh,
+		midi:  midi,
 	}
 }
 
@@ -82,7 +87,8 @@ func (c *Controller) Loop() (err error) {
 			for a := 0; a < 2; a++ {
 				// Change amp mode:
 				if c.curr.amp[a].mode != c.prev.amp[a].mode {
-
+					// TODO
+					c.midi.CC(axeMidiChannel, 0, 0)
 				}
 			}
 
