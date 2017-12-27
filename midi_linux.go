@@ -28,16 +28,20 @@ func (m *midiImpl) Close() error {
 }
 
 func (m *midiImpl) CC(channel uint8, controller uint8, value uint8) error {
-	n, err := m.f.Write([]byte{0xB0 | channel, controller, value})
+	_, err := m.f.Write([]byte{0xB0 | channel, controller, value})
 	return err
 }
 
 func (m *midiImpl) PC(channel uint8, program uint8) error {
-	n, err := m.f.Write([]byte{0xC0 | channel, program})
+	_, err := m.f.Write([]byte{0xC0 | channel, program})
 	return err
 }
 
 func (m *midiImpl) Sysex(data []byte) error {
-	n, err := m.f.Write([]byte{0xF0, ...data, 0xF7})
+	sysex := make([]byte, len(data)+2)
+	sysex = append(sysex, 0xF0)
+	sysex = append(sysex, data...)
+	sysex = append(sysex, 0xF7)
+	_, err := m.f.Write(sysex)
 	return err
 }
