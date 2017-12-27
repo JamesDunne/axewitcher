@@ -69,6 +69,10 @@ func (c *Controller) Loop() (err error) {
 					if c.curr.sceneIdx >= len(c.curr.pr.scenes) {
 						c.curr.sceneIdx = 0
 						c.curr.prIdx++
+						if c.curr.prIdx >= len(c.programs) {
+							c.curr.prIdx = 0
+						}
+
 						// Update pointers:
 						c.curr.pr = &c.programs[c.curr.prIdx]
 						c.curr.scene = &c.curr.pr.scenes[c.curr.sceneIdx]
