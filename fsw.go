@@ -1,10 +1,16 @@
 // fsw
 package main
 
-type FswState uint8
+type FswButton uint8
 
 const (
-	FswReset = FswState(1 << iota)
+	FswNone FswButton = iota
+	FswReset
 	FswPrev
 	FswNext
 )
+
+type FswEvent struct {
+	Fsw   FswButton
+	State bool
+}

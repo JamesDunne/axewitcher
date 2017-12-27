@@ -8,7 +8,7 @@ import (
 	"github.com/gvalkov/golang-evdev"
 )
 
-func ListenFootswitch() (fswCh chan FswState, err error) {
+func ListenFootswitch() (fswCh chan FswEvent, err error) {
 	fsw := (*evdev.InputDevice)(nil)
 
 	// List all input devices:
@@ -29,11 +29,9 @@ func ListenFootswitch() (fswCh chan FswState, err error) {
 	}
 	fmt.Printf("%v\n", fsw)
 
-	fswCh = make(chan FswState)
 	go func() {
 		defer close(fswCh)
 
-		fswState := FswState(0)
 		for {
 			ev, err := fsw.ReadOne()
 			if err != nil {
@@ -49,23 +47,20 @@ func ListenFootswitch() (fswCh chan FswState, err error) {
 			}
 
 			// Determine which footswitch was pressed/released:
-			mask := FswState(0)
+			// NOTE: unfortunately the footswitch driver does not allow multiple switches to be depressed simultaneously.
+			button := FswNone
 			if key.Scancode == evdev.KEY_A {
-				mask = FswReset
+				button = FswReset
 			} else if key.Scancode == evdev.KEY_B {
-				mask = FswPrev
+				button = FswPrev
 			} else if key.Scancode == evdev.KEY_C {
-				mask = FswNext
+				button = FswNext
 			}
 
-			// Apply mask based on down/up state:
-			if key.State == evdev.KeyDown {
-				fswState |= mask
-			} else if key.State == evdev.KeyUp {
-				fswState &= ^mask
+			fswCh <- FswEvent{
+				Fsw:   button,
+				State: key.State == evdev.KeyDown,
 			}
-
-			fswCh <- fswState
 		}
 	}()
 

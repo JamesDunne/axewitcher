@@ -1,9 +1,5 @@
 package main
 
-import (
-	"fmt"
-)
-
 type AmpMode int
 
 const (
@@ -12,24 +8,44 @@ const (
 	AmpAcoustic
 )
 
+type FXState struct {
+	name    string
+	midiCC  uint8
+	enabled bool
+}
+
 type AmpState struct {
 	mode      AmpMode
 	dirtyGain uint8
 	cleanGain uint8
+	volume    uint8
+	fx        [5]FXState
 }
 
 type ControllerState struct {
-	fsw FswState
+	sceneIdx int
+	scene    *Scene
+	prIdx    int
+	pr       *Program
+	amp      [2]AmpState
+}
+
+type Scene struct {
 	amp [2]AmpState
 }
 
-type Controller struct {
-	fswCh <-chan FswState
-	curr  ControllerState
-	prev  ControllerState
+type Program struct {
+	scenes []Scene
 }
 
-func NewController(fswCh <-chan FswState) *Controller {
+type Controller struct {
+	fswCh    <-chan FswEvent
+	programs []Program
+	curr     ControllerState
+	prev     ControllerState
+}
+
+func NewController(fswCh <-chan FswEvent) *Controller {
 	return &Controller{
 		fswCh: fswCh,
 	}
@@ -38,9 +54,40 @@ func NewController(fswCh <-chan FswState) *Controller {
 func (c *Controller) Loop() (err error) {
 	for {
 		select {
-		case state := <-c.fswCh:
-			c.curr.fsw = state
-			fmt.Printf("state = %v\n", state)
+		case ev := <-c.fswCh:
+			// Handle footswitch event:
+			if ev.State {
+				// Handle footswitch press:
+				switch ev.Fsw {
+				case FswNext:
+					c.curr.sceneIdx++
+					if c.curr.sceneIdx >= len(c.curr.pr.scenes) {
+						c.curr.sceneIdx = 0
+						c.curr.prIdx++
+						// Update pointers:
+						c.curr.pr = &c.programs[c.curr.prIdx]
+						c.curr.scene = &c.curr.pr.scenes[c.curr.sceneIdx]
+					}
+					break
+				case FswPrev:
+					break
+				case FswReset:
+					break
+				}
+			} else {
+				// Handle footswitch release:
+			}
+
+			// Send MIDI diff:
+			for a := 0; a < 2; a++ {
+				// Change amp mode:
+				if c.curr.amp[a].mode != c.prev.amp[a].mode {
+
+				}
+			}
+
+			// Copy to prev state:
+			c.prev = c.curr
 			break
 		}
 	}
