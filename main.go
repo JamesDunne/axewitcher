@@ -1,21 +1,13 @@
 package main
 
-import (
-	"fmt"
-)
-
 func main() {
-	// Find footswitch input device by name:
+	// Listen for footswitch activity:
 	fswCh, err := ListenFootswitch()
 	if err != nil {
 		panic(err)
 	}
 
-	for {
-		select {
-		case state := <-fswCh:
-			fmt.Printf("state = %v\n", state)
-			break
-		}
-	}
+	controller := NewController(fswCh)
+	controller.Loop()
+
 }
