@@ -1,5 +1,5 @@
 // midi_linux
-package main
+package axewitcher
 
 import (
 	"os"

@@ -1,5 +1,5 @@
 // fsw
-package main
+package axewitcher
 
 type FswButton uint8
 

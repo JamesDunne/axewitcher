@@ -1,4 +1,4 @@
-package main
+package axewitcher
 
 type AmpMode int
 

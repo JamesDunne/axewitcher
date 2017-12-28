@@ -1,5 +1,5 @@
 // midi_darwin
-package main
+package axewitcher
 
 type midiImpl struct {
 }

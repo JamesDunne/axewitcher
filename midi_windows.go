@@ -1,5 +1,5 @@
 // midi_windows
-package main
+package axewitcher
 
 import (
 	"errors"

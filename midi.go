@@ -1,5 +1,5 @@
 // midi
-package main
+package axewitcher
 
 type Midi interface {
 	Close() error
