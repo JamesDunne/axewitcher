@@ -41,65 +41,57 @@ type Program struct {
 }
 
 type Controller struct {
-	fswCh <-chan FswEvent
-	midi  Midi
+	midi Midi
 
 	programs []Program
 	curr     ControllerState
 	prev     ControllerState
 }
 
-func NewController(fswCh <-chan FswEvent, midi Midi) *Controller {
+func NewController(midi Midi) *Controller {
 	return &Controller{
-		fswCh: fswCh,
-		midi:  midi,
+		midi: midi,
 	}
 }
 
-func (c *Controller) Loop() (err error) {
-	for {
-		select {
-		case ev := <-c.fswCh:
-			// Handle footswitch event:
-			if ev.State {
-				// Handle footswitch press:
-				switch ev.Fsw {
-				case FswNext:
-					c.curr.sceneIdx++
-					if c.curr.sceneIdx >= len(c.curr.pr.scenes) {
-						c.curr.sceneIdx = 0
-						c.curr.prIdx++
-						if c.curr.prIdx >= len(c.programs) {
-							c.curr.prIdx = 0
-						}
-
-						// Update pointers:
-						c.curr.pr = &c.programs[c.curr.prIdx]
-						c.curr.scene = &c.curr.pr.scenes[c.curr.sceneIdx]
-					}
-					break
-				case FswPrev:
-					break
-				case FswReset:
-					break
+func (c *Controller) HandleFswEvent(ev FswEvent) (err error) {
+	// Handle footswitch event:
+	if ev.State {
+		// Handle footswitch press:
+		switch ev.Fsw {
+		case FswNext:
+			c.curr.sceneIdx++
+			if c.curr.sceneIdx >= len(c.curr.pr.scenes) {
+				c.curr.sceneIdx = 0
+				c.curr.prIdx++
+				if c.curr.prIdx >= len(c.programs) {
+					c.curr.prIdx = 0
 				}
-			} else {
-				// Handle footswitch release:
-			}
 
-			// Send MIDI diff:
-			for a := 0; a < 2; a++ {
-				// Change amp mode:
-				if c.curr.amp[a].mode != c.prev.amp[a].mode {
-					// TODO
-					c.midi.CC(axeMidiChannel, 0, 0)
-				}
+				// Update pointers:
+				c.curr.pr = &c.programs[c.curr.prIdx]
+				c.curr.scene = &c.curr.pr.scenes[c.curr.sceneIdx]
 			}
-
-			// Copy to prev state:
-			c.prev = c.curr
+			break
+		case FswPrev:
+			break
+		case FswReset:
 			break
 		}
+	} else {
+		// Handle footswitch release:
 	}
+
+	// Send MIDI diff:
+	for a := 0; a < 2; a++ {
+		// Change amp mode:
+		if c.curr.amp[a].mode != c.prev.amp[a].mode {
+			// TODO
+			c.midi.CC(axeMidiChannel, 0, 0)
+		}
+	}
+
+	// Copy to prev state:
+	c.prev = c.curr
 	return nil
 }

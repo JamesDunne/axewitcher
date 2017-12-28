@@ -14,7 +14,15 @@ func main() {
 	}
 	defer midi.Close()
 
-	// Start controller loop:
-	controller := NewController(fswCh, midi)
-	controller.Loop()
+	// Initialize controller:
+	controller := NewController(midi)
+
+	// Run an idle loop awaiting events:
+	for {
+		select {
+		case ev := <-fswCh:
+			controller.HandleFswEvent(ev)
+			break
+		}
+	}
 }
