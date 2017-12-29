@@ -11,39 +11,43 @@ const (
 )
 
 type FXState struct {
-	name    string
-	midiCC  uint8
-	enabled bool
+	Name    string
+	MidiCC  uint8
+	Enabled bool
 }
 
 type AmpState struct {
-	mode      AmpMode
-	dirtyGain uint8
-	cleanGain uint8
-	volume    uint8
-	fx        [5]FXState
+	Mode      AmpMode
+	DirtyGain uint8
+	CleanGain uint8
+	Volume    uint8
+	Fx        [5]FXState
+}
+
+type AmpConfig struct {
 }
 
 type ControllerState struct {
 	sceneIdx int
-	scene    *Scene
+	Scene    *Scene
 	prIdx    int
 	pr       *Program
-	amp      [2]AmpState
+	Amp      [2]AmpState
 }
 
 type Scene struct {
-	amp [2]AmpState
+	Amp [2]AmpState
 }
 
 type Program struct {
-	scenes []Scene
+	Scenes    []*Scene
+	AmpConfig [2]AmpConfig
 }
 
 type Controller struct {
 	midi Midi
 
-	programs []Program
+	Programs []*Program
 	curr     ControllerState
 	prev     ControllerState
 }
@@ -61,16 +65,16 @@ func (c *Controller) HandleFswEvent(ev FswEvent) (err error) {
 		switch ev.Fsw {
 		case FswNext:
 			c.curr.sceneIdx++
-			if c.curr.sceneIdx >= len(c.curr.pr.scenes) {
+			if c.curr.sceneIdx >= len(c.curr.pr.Scenes) {
 				c.curr.sceneIdx = 0
 				c.curr.prIdx++
-				if c.curr.prIdx >= len(c.programs) {
+				if c.curr.prIdx >= len(c.Programs) {
 					c.curr.prIdx = 0
 				}
 
 				// Update pointers:
-				c.curr.pr = &c.programs[c.curr.prIdx]
-				c.curr.scene = &c.curr.pr.scenes[c.curr.sceneIdx]
+				c.curr.pr = c.Programs[c.curr.prIdx]
+				c.curr.Scene = c.curr.pr.Scenes[c.curr.sceneIdx]
 			}
 			break
 		case FswPrev:
@@ -85,7 +89,7 @@ func (c *Controller) HandleFswEvent(ev FswEvent) (err error) {
 	// Send MIDI diff:
 	for a := 0; a < 2; a++ {
 		// Change amp mode:
-		if c.curr.amp[a].mode != c.prev.amp[a].mode {
+		if c.curr.Amp[a].Mode != c.prev.Amp[a].Mode {
 			// TODO
 			c.midi.CC(axeMidiChannel, 0, 0)
 		}
