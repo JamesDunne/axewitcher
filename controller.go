@@ -1,5 +1,9 @@
 package axewitcher
 
+import (
+	"log"
+)
+
 type AmpMode int
 
 const axeMidiChannel = 2
@@ -64,6 +68,7 @@ func (c *Controller) HandleFswEvent(ev FswEvent) (err error) {
 		// Handle footswitch press:
 		switch ev.Fsw {
 		case FswNext:
+			log.Println("next")
 			c.curr.sceneIdx++
 			if c.curr.sceneIdx >= len(c.curr.pr.Scenes) {
 				c.curr.sceneIdx = 0
