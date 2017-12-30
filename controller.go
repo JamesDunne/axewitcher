@@ -1,6 +1,9 @@
 package axewitcher
 
-//"log"
+import (
+	"math"
+	"strings"
+)
 
 const axeMidiChannel = 2
 
@@ -65,6 +68,54 @@ var fxNames = []string{
 	"Wah2", // 98
 }
 
+func findFxMidiCC(name string) uint8 {
+	nameLower := strings.ToLower(name)
+	for i, cmp := range fxNames {
+		if strings.ToLower(cmp) == nameLower {
+			return uint8(41 + i)
+		}
+	}
+	return 255
+}
+
+//  p = 10 ^ (dB / 20)
+// dB = log10(p) * 20
+// Log20A means 20% percent at half-way point of knob, i.e. dB = 20 * ln(0.20) / ln(10) = -13.98dB
+func dB(percent float64) float64 {
+	db := math.Log10(percent) * 20.0
+	return db
+}
+
+func MIDItoDB(n uint8) float64 {
+	p := float64(n) / 127.0
+	// log20a taper (50% -> 20%)
+	p = (math.Pow(15.5, p) - 1.0) / 14.5
+	//fmt.Printf("%3.f\n", p * 127.0)
+	db := dB(p) + 6.0
+	return db
+}
+
+func round(n float64) float64 {
+	if (n - math.Floor(n)) >= 0.5 {
+		return math.Ceil(n)
+	} else {
+		return math.Floor(n)
+	}
+}
+
+func DBtoMIDI(db float64) uint8 {
+	db = db - 6.0
+	p := math.Pow(10.0, (db / 20.0))
+	plog := math.Log10(p*14.5+1.0) / math.Log10(15.5)
+	plog *= 127.0
+	return uint8(round(plog))
+}
+
+func logTaper(b int) int {
+	// 127 * (ln(x+1)^2) / (ln(127+1)^2)
+	return int(127.0 * math.Pow(math.Log2(float64(b)+1.0), 2) / math.Pow(math.Log2(127.0+1.0), 2))
+}
+
 type AmpMode int
 
 const (
@@ -90,7 +141,9 @@ type AmpState struct {
 }
 
 type AmpConfig struct {
-	Fx [5]FXConfig
+	DirtyGain uint8
+	CleanGain uint8
+	Fx        [5]FXConfig
 }
 
 type ControllerState struct {
@@ -102,10 +155,13 @@ type ControllerState struct {
 }
 
 type Scene struct {
-	Amp [2]AmpState
+	Name string
+	Amp  [2]AmpState
 }
 
 type Program struct {
+	Name      string
+	Tempo     int
 	Scenes    []*Scene
 	AmpConfig [2]AmpConfig
 }
@@ -113,7 +169,8 @@ type Program struct {
 type Controller struct {
 	midi Midi
 
-	Programs []*Program
+	DefaultAmpConfig [2]AmpConfig
+	Programs         []*Program
 
 	Curr ControllerState
 	Prev ControllerState
