@@ -182,6 +182,15 @@ func NewController(midi Midi) *Controller {
 	}
 }
 
+func (c *Controller) Init() {
+	curr := &c.Curr
+
+	curr.PrIdx = 0
+	curr.Pr = c.Programs[curr.PrIdx]
+	curr.SceneIdx = 0
+	curr.Scene = curr.Pr.Scenes[curr.SceneIdx]
+}
+
 func (c *Controller) HandleFswEvent(ev FswEvent) (err error) {
 	curr := &c.Curr
 
@@ -190,14 +199,7 @@ func (c *Controller) HandleFswEvent(ev FswEvent) (err error) {
 		// Handle footswitch press:
 		switch ev.Fsw {
 		case FswNext:
-			if curr.Pr == nil {
-				curr.PrIdx = 0
-				curr.Pr = c.Programs[curr.PrIdx]
-				curr.SceneIdx = 0
-				curr.Scene = curr.Pr.Scenes[curr.SceneIdx]
-			} else {
-				curr.SceneIdx++
-			}
+			curr.SceneIdx++
 
 			if curr.SceneIdx >= len(curr.Pr.Scenes) {
 				curr.SceneIdx = 0
