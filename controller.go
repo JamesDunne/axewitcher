@@ -94,10 +94,10 @@ type AmpConfig struct {
 }
 
 type ControllerState struct {
-	sceneIdx int
+	SceneIdx int
 	Scene    *Scene
-	prIdx    int
-	pr       *Program
+	PrIdx    int
+	Pr       *Program
 	Amp      [2]AmpState
 }
 
@@ -126,22 +126,24 @@ func NewController(midi Midi) *Controller {
 }
 
 func (c *Controller) HandleFswEvent(ev FswEvent) (err error) {
+	curr := &c.Curr
+
 	// Handle footswitch event:
 	if ev.State {
 		// Handle footswitch press:
 		switch ev.Fsw {
 		case FswNext:
-			c.Curr.sceneIdx++
-			if c.Curr.sceneIdx >= len(c.Curr.pr.Scenes) {
-				c.Curr.sceneIdx = 0
-				c.Curr.prIdx++
-				if c.Curr.prIdx >= len(c.Programs) {
-					c.Curr.prIdx = 0
+			curr.SceneIdx++
+			if curr.SceneIdx >= len(curr.Pr.Scenes) {
+				curr.SceneIdx = 0
+				curr.PrIdx++
+				if curr.PrIdx >= len(c.Programs) {
+					curr.PrIdx = 0
 				}
 
 				// Update pointers:
-				c.Curr.pr = c.Programs[c.Curr.prIdx]
-				c.Curr.Scene = c.Curr.pr.Scenes[c.Curr.sceneIdx]
+				curr.Pr = c.Programs[curr.PrIdx]
+				curr.Scene = curr.Pr.Scenes[curr.SceneIdx]
 			}
 			break
 		case FswPrev:
@@ -156,7 +158,7 @@ func (c *Controller) HandleFswEvent(ev FswEvent) (err error) {
 	// Send MIDI diff:
 	for a := 0; a < 2; a++ {
 		// Change amp mode:
-		if c.Curr.Amp[a].Mode != c.Prev.Amp[a].Mode {
+		if curr.Amp[a].Mode != c.Prev.Amp[a].Mode {
 			// TODO
 			c.midi.CC(axeMidiChannel, 0, 0)
 		}
