@@ -190,7 +190,15 @@ func (c *Controller) HandleFswEvent(ev FswEvent) (err error) {
 		// Handle footswitch press:
 		switch ev.Fsw {
 		case FswNext:
-			curr.SceneIdx++
+			if curr.Pr == nil {
+				curr.PrIdx = 0
+				curr.Pr = c.Programs[curr.PrIdx]
+				curr.SceneIdx = 0
+				curr.Scene = curr.Pr.Scenes[curr.SceneIdx]
+			} else {
+				curr.SceneIdx++
+			}
+
 			if curr.SceneIdx >= len(curr.Pr.Scenes) {
 				curr.SceneIdx = 0
 				curr.PrIdx++
