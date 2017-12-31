@@ -1,6 +1,7 @@
 package axewitcher
 
 import (
+	"log"
 	"math"
 	"strings"
 )
@@ -184,22 +185,35 @@ func NewController(midi Midi) *Controller {
 }
 
 func (c *Controller) Init() {
-	curr := &c.Curr
-
-	curr.PrIdx = 0
-	curr.Pr = c.Programs[curr.PrIdx]
-	curr.SceneIdx = 0
-	curr.Scene = curr.Pr.Scenes[curr.SceneIdx]
-
-	c.Activate()
+	c.Curr.PrIdx = 0
+	c.ActivateProgram()
 }
 
-func (c *Controller) Activate() {
+func (c *Controller) ActivateProgram() {
 	curr := &c.Curr
-	œ
+
+	if curr.PrIdx >= len(c.Programs) {
+		curr.PrIdx = 0
+	}
+	curr.SceneIdx = 0
+
+	log.Println("activate program", curr.PrIdx+1, len(c.Programs))
+
+	curr.Pr = c.Programs[curr.PrIdx]
 	if curr.Pr != nil {
 		curr.AmpConfig = curr.Pr.AmpConfig
 	}
+
+	// Activate scene:
+	c.ActivateScene()
+}
+
+func (c *Controller) ActivateScene() {
+	curr := &c.Curr
+
+	log.Println("activate scene", curr.SceneIdx+1, len(curr.Pr.Scenes))
+
+	curr.Scene = curr.Pr.Scenes[curr.SceneIdx]
 	if curr.Scene != nil {
 		curr.Amp = curr.Scene.Amp
 	}
@@ -213,21 +227,17 @@ func (c *Controller) HandleFswEvent(ev FswEvent) (err error) {
 		switch ev.Fsw {
 		case FswNext:
 			curr.SceneIdx++
-
-			// TODO: split out to SceneChange.
 			if curr.SceneIdx >= len(curr.Pr.Scenes) {
-				curr.SceneIdx = 0
 				curr.PrIdx++
 				if curr.PrIdx >= len(c.Programs) {
 					curr.PrIdx = 0
 				}
+				curr.SceneIdx = 0
 
-				// Update pointers:
-				curr.Pr = c.Programs[curr.PrIdx]
-				curr.Scene = curr.Pr.Scenes[curr.SceneIdx]
-
-				// Activate scene:
-				c.Activate()
+				// Activate program:
+				c.ActivateProgram()
+			} else {
+				c.ActivateScene()
 			}
 			break
 		case FswPrev:
