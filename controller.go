@@ -194,7 +194,6 @@ func (c *Controller) Init() {
 func (c *Controller) HandleFswEvent(ev FswEvent) (err error) {
 	curr := &c.Curr
 
-	// Handle footswitch event:
 	if ev.State {
 		// Handle footswitch press:
 		switch ev.Fsw {
