@@ -147,11 +147,12 @@ type AmpConfig struct {
 }
 
 type ControllerState struct {
-	SceneIdx int
-	Scene    *Scene
-	PrIdx    int
-	Pr       *Program
-	Amp      [2]AmpState
+	SceneIdx  int
+	Scene     *Scene
+	PrIdx     int
+	Pr        *Program
+	Amp       [2]AmpState
+	AmpConfig [2]AmpConfig
 }
 
 type Scene struct {
@@ -189,6 +190,19 @@ func (c *Controller) Init() {
 	curr.Pr = c.Programs[curr.PrIdx]
 	curr.SceneIdx = 0
 	curr.Scene = curr.Pr.Scenes[curr.SceneIdx]
+
+	c.Activate()
+}
+
+func (c *Controller) Activate() {
+	curr := &c.Curr
+	œ
+	if curr.Pr != nil {
+		curr.AmpConfig = curr.Pr.AmpConfig
+	}
+	if curr.Scene != nil {
+		curr.Amp = curr.Scene.Amp
+	}
 }
 
 func (c *Controller) HandleFswEvent(ev FswEvent) (err error) {
@@ -200,6 +214,7 @@ func (c *Controller) HandleFswEvent(ev FswEvent) (err error) {
 		case FswNext:
 			curr.SceneIdx++
 
+			// TODO: split out to SceneChange.
 			if curr.SceneIdx >= len(curr.Pr.Scenes) {
 				curr.SceneIdx = 0
 				curr.PrIdx++
@@ -210,6 +225,9 @@ func (c *Controller) HandleFswEvent(ev FswEvent) (err error) {
 				// Update pointers:
 				curr.Pr = c.Programs[curr.PrIdx]
 				curr.Scene = curr.Pr.Scenes[curr.SceneIdx]
+
+				// Activate scene:
+				c.Activate()
 			}
 			break
 		case FswPrev:
