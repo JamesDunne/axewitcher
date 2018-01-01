@@ -249,6 +249,13 @@ func (c *Controller) HandleFswEvent(ev FswEvent) (err error) {
 		// Handle footswitch release:
 	}
 
+	// Send new MIDI state:
+	return c.SendMidi()
+}
+
+func (c *Controller) SendMidi() error {
+	curr := &c.Curr
+
 	// Send MIDI diff:
 	for a := 0; a < 2; a++ {
 		// Change amp mode:
