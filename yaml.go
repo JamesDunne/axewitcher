@@ -2,7 +2,6 @@ package axewitcher
 
 import (
 	"io/ioutil"
-	"log"
 
 	"gopkg.in/yaml.v2"
 )
@@ -43,7 +42,6 @@ func (c *Controller) Load() error {
 	c.Programs = make([]*Program, 0, len(programsYaml))
 	for _, y := range programsYaml {
 		yp := y.(map[interface{}]interface{})
-		log.Println(yp)
 
 		ac := c.DefaultAmpConfig
 		if ampconfig, ok := yp["amp"]; ok {
@@ -54,7 +52,6 @@ func (c *Controller) Load() error {
 		scenes := make([]*Scene, 0, len(scenesYaml))
 		for _, sy := range scenesYaml {
 			syp := sy.(map[interface{}]interface{})
-			//log.Println(syp)
 
 			extractAmpState := func(ampConfig *AmpConfig, sypa map[interface{}]interface{}) AmpState {
 				m := AmpMode(0)
@@ -121,7 +118,6 @@ func (c *Controller) Load() error {
 					extractAmpState(&ac[1], syp["JD"].(map[interface{}]interface{})),
 				},
 			}
-			log.Println(scene)
 
 			scenes = append(scenes, scene)
 		}
